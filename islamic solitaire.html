@@ -1,0 +1,434 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:linear-gradient(135deg,#1a0540 0%,#3a1080 40%,#6a1fb5 80%,#c06000 100%);min-height:100vh;font-family:'Lora',serif;}
+#app{padding:10px 10px 30px;max-width:780px;margin:0 auto;position:relative;}
+
+#topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:5px;}
+.gtitle{font-family:'Cinzel',serif;font-size:15px;color:#F9E44A;letter-spacing:2px;}
+.stats{display:flex;gap:6px;flex-wrap:wrap;}
+.pill{background:rgba(255,255,255,.12);border:1px solid rgba(249,228,74,.4);border-radius:14px;padding:3px 9px;text-align:center;}
+.plbl{font-size:8px;color:#E8D4FF;letter-spacing:1px;text-transform:uppercase;}
+.pval{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:#F9E44A;}
+.pill.warn .pval{color:#FF8080;}
+
+#tbar-wrap{height:4px;background:rgba(255,255,255,.15);border-radius:3px;margin-bottom:8px;}
+#tbar{height:100%;border-radius:3px;background:linear-gradient(90deg,#F0C040,#F9E44A);transition:width .4s linear,background .4s;}
+
+#combo-row{text-align:center;min-height:20px;margin-bottom:6px;}
+#combo-txt{font-family:'Cinzel',serif;font-size:12px;color:#F9E44A;display:none;}
+
+#layer-tabs{display:flex;gap:6px;margin-bottom:8px;}
+.ltab{flex:1;padding:5px 4px;text-align:center;border-radius:10px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.5px;border:1.5px solid rgba(249,228,74,.3);color:rgba(249,228,74,.5);background:rgba(255,255,255,.05);transition:all .2s;}
+.ltab.active{border-color:#F9E44A;color:#F9E44A;background:rgba(249,228,74,.15);}
+.ltab.locked{opacity:.35;cursor:not-allowed;}
+.ltab.done{border-color:#7FFF00;color:#7FFF00;background:rgba(127,255,0,.1);}
+.ltab-ico{font-size:12px;display:block;margin-bottom:1px;}
+
+#piles-area{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px;}
+.pile-col{display:flex;flex-direction:column;gap:3px;}
+.pile-lbl{font-family:'Cinzel',serif;font-size:8px;color:rgba(249,228,74,.5);letter-spacing:1px;text-align:center;margin-bottom:2px;}
+.pile-card{border-radius:9px;padding:7px 6px;cursor:pointer;transition:transform .15s,box-shadow .15s;border:1.5px solid rgba(249,228,74,.5);position:relative;user-select:none;}
+.pile-card:hover:not(.locked-card):not(.full-hand){transform:translateY(-3px);box-shadow:0 5px 16px rgba(0,0,0,.4);}
+.pile-card.wrd{background:linear-gradient(145deg,#1A0050,#3D0F8A);}
+.pile-card.def{background:linear-gradient(145deg,#5C2000,#9B4500);}
+.pile-card.locked-card{opacity:.38;cursor:not-allowed;filter:blur(1.2px);}
+.pile-card.full-hand{opacity:.55;cursor:not-allowed;}
+.pile-card.full-hand::after{content:'Tangan penuh';position:absolute;inset:0;border-radius:9px;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:8px;color:#FF8080;letter-spacing:.5px;}
+.pc-badge{position:absolute;top:3px;right:4px;font-size:7px;background:rgba(249,228,74,.2);border-radius:5px;padding:1px 3px;color:#F9E44A;font-family:'Cinzel',serif;}
+.locked-overlay{position:absolute;inset:0;border-radius:9px;background:rgba(10,0,30,.45);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.pc-arabic{font-size:13px;color:rgba(249,228,74,.85);line-height:1.2;margin-bottom:2px;}
+.pc-word{font-family:'Cinzel',serif;font-size:10px;font-weight:700;color:#F9E44A;line-height:1.2;}
+.pc-def{font-size:9px;color:#FFE0B0;line-height:1.35;font-style:italic;}
+
+/* HAND */
+#hand-section{margin-bottom:8px;}
+.hand-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.hand-ttl{font-family:'Cinzel',serif;font-size:10px;color:#E8D4FF;letter-spacing:1px;}
+/* slot counter */
+.hand-slots{display:flex;gap:4px;align-items:center;}
+.slot-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(249,228,74,.5);background:rgba(255,255,255,.08);transition:all .2s;}
+.slot-dot.filled{background:#F9E44A;border-color:#F9E44A;box-shadow:0 0 6px rgba(249,228,74,.5);}
+.slot-dot.filled.sel{background:#7FFF00;border-color:#7FFF00;box-shadow:0 0 8px rgba(127,255,0,.6);}
+
+#hand-cards{display:flex;gap:7px;min-height:70px;background:rgba(0,0,0,.2);border-radius:10px;padding:8px;border:1px dashed rgba(249,228,74,.3);align-items:flex-start;}
+.hempty{color:rgba(249,228,74,.3);font-size:10px;font-style:italic;align-self:center;margin:0 auto;}
+.hcard{border-radius:8px;padding:7px 8px;cursor:pointer;border:1.5px solid rgba(249,228,74,.5);transition:all .15s;position:relative;flex:1;max-width:180px;}
+.hcard:hover{transform:translateY(-2px);}
+.hcard.wrd{background:linear-gradient(145deg,#1A0050,#3D0F8A);}
+.hcard.def{background:linear-gradient(145deg,#5C2000,#9B4500);}
+.hcard.sel{border-color:#7FFF00;box-shadow:0 0 10px rgba(127,255,0,.4);}
+.hc-rm{position:absolute;top:2px;right:4px;font-size:9px;color:rgba(255,255,255,.4);cursor:pointer;line-height:1;}
+.hc-rm:hover{color:#ff8080;}
+.hc-badge{position:absolute;top:3px;right:16px;font-size:7px;background:rgba(249,228,74,.2);border-radius:4px;padding:1px 3px;color:#F9E44A;font-family:'Cinzel',serif;}
+.hc-arabic{font-size:13px;color:rgba(249,228,74,.85);}
+.hc-word{font-family:'Cinzel',serif;font-size:10px;font-weight:700;color:#F9E44A;}
+.hc-def{font-size:9px;color:#FFE0B0;font-style:italic;line-height:1.3;}
+/* empty slot placeholder */
+.hslot-empty{flex:1;max-width:180px;min-height:64px;border:1.5px dashed rgba(249,228,74,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.hslot-empty span{font-size:18px;opacity:.3;}
+
+#btn-area{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;}
+.btn-setor{flex:1;padding:9px;background:linear-gradient(135deg,#F0C040,#F9A010);border:none;border-radius:18px;font-family:'Cinzel',serif;font-size:12px;color:#2D0A6E;font-weight:700;cursor:pointer;transition:opacity .2s;}
+.btn-setor:disabled{opacity:.3;cursor:not-allowed;}
+.btn-sm2{padding:9px 12px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.22);border-radius:18px;font-family:'Cinzel',serif;font-size:11px;color:rgba(255,255,255,.65);cursor:pointer;}
+.btn-sm2:hover{background:rgba(255,80,80,.2);border-color:#FF8080;color:#FF8080;}
+.btn-sm3{padding:9px 12px;background:rgba(249,228,74,.1);border:1.5px solid rgba(249,228,74,.4);border-radius:18px;font-family:'Cinzel',serif;font-size:11px;color:#F9E44A;cursor:pointer;}
+
+#log{min-height:24px;text-align:center;margin-bottom:4px;}
+#log-txt{font-family:'Cinzel',serif;font-size:11px;color:#F9E44A;}
+#log-txt.warn{color:#FF8080;}
+
+#overlay{display:none;position:absolute;inset:0;background:rgba(15,0,45,.94);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;border-radius:12px;z-index:50;}
+#overlay.show{display:flex;}
+#overlay h2{font-family:'Cinzel',serif;font-size:24px;color:#F9E44A;margin-bottom:6px;}
+.obig{font-family:'Cinzel',serif;font-size:42px;color:#F9E44A;margin:8px 0;}
+#overlay p{color:#E8D4FF;font-size:12px;margin-bottom:18px;line-height:1.7;}
+#overlay button{padding:10px 28px;background:linear-gradient(135deg,#F0C040,#F9A010);border:none;border-radius:22px;font-family:'Cinzel',serif;font-size:13px;color:#2D0A6E;font-weight:700;cursor:pointer;}
+
+.ptpop{position:absolute;font-family:'Cinzel',serif;font-size:15px;color:#F9E44A;pointer-events:none;z-index:99;animation:ptup .9s ease forwards;font-weight:700;}
+@keyframes ptup{0%{opacity:0;transform:translateY(0)}15%{opacity:1}80%{opacity:1;transform:translateY(-32px)}100%{opacity:0;transform:translateY(-48px)}}
+</style>
+
+<div id="app">
+<div id="topbar">
+  <div class="gtitle">✦ Islamic Solitaire ✦</div>
+  <div class="stats">
+    <div class="pill"><div class="plbl">Poin</div><div class="pval" id="v-score">0</div></div>
+    <div class="pill"><div class="plbl">Combo</div><div class="pval" id="v-combo">x1</div></div>
+    <div class="pill"><div class="plbl">Layer</div><div class="pval" id="v-layer">1/4</div></div>
+    <div class="pill"><div class="plbl">Setor</div><div class="pval" id="v-pairs">0/32</div></div>
+    <div class="pill"><div class="plbl">Waktu</div><div class="pval" id="v-time">120</div></div>
+  </div>
+</div>
+<div id="tbar-wrap"><div id="tbar" style="width:100%"></div></div>
+<div id="combo-row"><span id="combo-txt"></span></div>
+<div id="layer-tabs"></div>
+<div id="piles-area"></div>
+
+<div id="hand-section">
+  <div class="hand-hdr">
+    <div class="hand-ttl">🤚 KARTU DI TANGAN <span style="color:rgba(249,228,74,.5);font-size:9px;margin-left:4px;">MAKS 3</span></div>
+    <div class="hand-slots" id="hand-slots"></div>
+  </div>
+  <div id="hand-cards"></div>
+</div>
+
+<div id="btn-area">
+  <button class="btn-setor" id="btn-setor" disabled>⬆ Setor Pasangan</button>
+  <button class="btn-sm2" id="btn-clear">✕ Buang Tangan</button>
+  <button class="btn-sm3" id="btn-restart">↺ Ulang</button>
+</div>
+<div id="log"><span id="log-txt"></span></div>
+
+<div id="overlay">
+  <h2 id="ovl-title"></h2>
+  <div class="obig" id="ovl-score"></div>
+  <p id="ovl-msg"></p>
+  <button id="ovl-btn">Main Lagi</button>
+</div>
+</div>
+
+<script>
+const MAX_HAND = 3;
+const TIME_LIMIT = 120;
+const LAYER_COUNT = 4;
+
+const ALL_PAIRS=[
+  {id:0,  layer:1, w:'Salah',         a:'صلاة',              d:'Shalat wajib lima kali sehari; salah satu rukun Islam'},
+  {id:1,  layer:1, w:'Zakat',         a:'زكاة',              d:'Kewajiban mengeluarkan sebagian harta untuk yang membutuhkan'},
+  {id:2,  layer:1, w:'Sawm',          a:'صوم',               d:'Puasa Ramadan; menahan makan, minum, dan hawa nafsu'},
+  {id:3,  layer:1, w:'Hajj',          a:'حج',                d:'Ibadah haji ke Makkah; wajib sekali seumur hidup'},
+  {id:4,  layer:1, w:'Tawbah',        a:'توبة',              d:'Taubat tulus; kembali kepada Allah dengan penyesalan'},
+  {id:5,  layer:1, w:'Iman',          a:'إيمان',             d:'Keyakinan kepada Allah, malaikat, kitab, rasul, dan takdir'},
+  {id:6,  layer:1, w:'Ihsan',         a:'إحسان',             d:'Beribadah sempurna seolah melihat Allah; Dia selalu melihat'},
+  {id:7,  layer:1, w:'Tawhid',        a:'توحيد',             d:'Keesaan Allah; konsep paling mendasar dalam akidah Islam'},
+  {id:8,  layer:2, w:"Ka'bah",        a:'الكعبة',            d:"Bangunan kubus di Masjidil Haram; kiblat umat Islam"},
+  {id:9,  layer:2, w:'Madinah',       a:'المدينة',           d:'Kota suci kedua; tempat hijrah dan wafatnya Nabi ﷺ'},
+  {id:10, layer:2, w:'Masjid Nabawi', a:'المسجد النبوي',     d:'Masjid Nabi ﷺ di Madinah; mengandung makam beliau'},
+  {id:11, layer:2, w:'Arafah',        a:'عرفة',              d:'Padang luas dekat Makkah; tempat wukuf puncak haji'},
+  {id:12, layer:2, w:'Zamzam',        a:'زمزم',              d:'Sumur suci di Masjidil Haram; mengalir sejak zaman Ibrahim'},
+  {id:13, layer:2, w:'Raudhah',       a:'الروضة',            d:'Area di Masjid Nabawi; disebut Nabi ﷺ taman dari surga'},
+  {id:14, layer:2, w:"Safa & Marwa",  a:'الصفا والمروة',     d:"Dua bukit dekat Ka'bah; tempat sa'i dalam haji/umroh"},
+  {id:15, layer:2, w:'Mina',          a:'منى',               d:'Lembah dekat Makkah; tempat melempar jumrah saat haji'},
+  {id:16, layer:3, w:"Isra Mi'raj",   a:'الإسراء والمعراج',  d:'Perjalanan malam Nabi ﷺ dari Makkah ke langit ketujuh'},
+  {id:17, layer:3, w:'Hijrah',        a:'الهجرة',            d:'Perpindahan Nabi ﷺ ke Madinah; awal kalender Hijriah'},
+  {id:18, layer:3, w:'Khadijah r.a.', a:'خديجة',             d:'Istri pertama Nabi ﷺ; wanita pertama masuk Islam'},
+  {id:19, layer:3, w:'Abu Bakar r.a.',a:'أبو بكر',           d:'Sahabat terdekat; khalifah pertama setelah Nabi ﷺ wafat'},
+  {id:20, layer:3, w:'Badar',         a:'بدر',               d:'Pertempuran besar pertama Islam; Muslim menang meski sedikit'},
+  {id:21, layer:3, w:'Quran',         a:'القرآن',            d:'Kitab suci Islam; wahyu Allah kepada Nabi Muhammad ﷺ'},
+  {id:22, layer:3, w:'Ramadan',       a:'رمضان',             d:'Bulan ke-9 Hijriah; Al-Quran pertama kali diturunkan'},
+  {id:23, layer:3, w:'Lailatul Qadar',a:'ليلة القدر',        d:'Malam lebih baik dari seribu bulan; di 10 malam terakhir Ramadan'},
+  {id:24, layer:4, w:'Sabar',         a:'صبر',               d:'Kesabaran; menahan diri dari keluh kesah saat menghadapi ujian'},
+  {id:25, layer:4, w:'Syukur',        a:'شكر',               d:'Rasa terima kasih kepada Allah atas segala nikmat yang diberikan'},
+  {id:26, layer:4, w:'Tawadhu',       a:'تواضع',             d:'Rendah hati; tidak sombong meski memiliki kelebihan'},
+  {id:27, layer:4, w:'Amanah',        a:'أمانة',             d:'Sifat dapat dipercaya; menjaga titipan dengan sepenuh hati'},
+  {id:28, layer:4, w:'Ikhlas',        a:'إخلاص',             d:'Ketulusan niat semata-mata karena Allah, bukan karena pujian'},
+  {id:29, layer:4, w:'Silaturahmi',   a:'صلة الرحم',         d:'Menjalin hubungan baik dengan keluarga dan sesama Muslim'},
+  {id:30, layer:4, w:'Tafakkur',      a:'تفكر',              d:'Merenungkan ciptaan Allah untuk memperkuat keimanan'},
+  {id:31, layer:4, w:'Ilmu',          a:'علم',               d:'Pengetahuan; menuntut ilmu wajib bagi setiap Muslim'},
+];
+
+let score=0,combo=0,totalSetor=0,timeLeft=TIME_LIMIT,timerInt=null,gameOver=false;
+let currentLayer=1, layerDone=[false,false,false,false];
+let hand=[], handSel=null, pileData={};
+
+function shuf(a){let r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+
+function makePiles(ln){
+  const pairs=ALL_PAIRS.filter(p=>p.layer===ln);
+  let cards=[];
+  pairs.forEach(p=>{
+    cards.push({uid:p.id*2,   pairId:p.id,layer:ln,type:'wrd',w:p.w,a:p.a,d:p.d,taken:false});
+    cards.push({uid:p.id*2+1, pairId:p.id,layer:ln,type:'def',w:p.w,a:p.a,d:p.d,taken:false});
+  });
+  cards=shuf(cards);
+  const piles=[[],[],[],[]];
+  cards.forEach((c,i)=>piles[i%4].push(c));
+  return piles;
+}
+
+function init(){
+  score=0;combo=0;totalSetor=0;timeLeft=TIME_LIMIT;
+  gameOver=false;currentLayer=1;layerDone=[false,false,false,false];
+  hand=[];handSel=null;
+  for(let l=1;l<=LAYER_COUNT;l++) pileData[l]=makePiles(l);
+  document.getElementById('overlay').classList.remove('show');
+  updStats();setLog('');showCombo(false);
+  renderLayerTabs();renderPiles();renderHand();
+  clearInterval(timerInt);
+  timerInt=setInterval(tick,1000);
+}
+
+function tick(){
+  if(gameOver)return;
+  timeLeft--;
+  document.getElementById('v-time').textContent=timeLeft;
+  const pct=timeLeft/TIME_LIMIT*100;
+  const tb=document.getElementById('tbar');
+  tb.style.width=pct+'%';
+  tb.style.background=pct>50?'linear-gradient(90deg,#F0C040,#F9E44A)':pct>25?'linear-gradient(90deg,#F08010,#F0C040)':'linear-gradient(90deg,#D03020,#F08010)';
+  if(timeLeft<=0){clearInterval(timerInt);endGame(false,'⏰ Waktu Habis!');}
+}
+
+const PILE_NAMES=['Tumpukan A','Tumpukan B','Tumpukan C','Tumpukan D'];
+const LAYER_ICONS=['📖','🕋','⚔️','✨'];
+
+function renderLayerTabs(){
+  const wrap=document.getElementById('layer-tabs');wrap.innerHTML='';
+  for(let l=1;l<=LAYER_COUNT;l++){
+    const done=layerDone[l-1], locked=l>currentLayer, active=l===currentLayer;
+    const btn=document.createElement('div');
+    btn.className='ltab'+(done?' done':locked?' locked':active?' active':'');
+    btn.innerHTML=`<span class="ltab-ico">${LAYER_ICONS[l-1]}</span>Lap.${l}${done?' ✓':locked?' 🔒':''}`;
+    wrap.appendChild(btn);
+  }
+}
+
+function renderPiles(){
+  const area=document.getElementById('piles-area');area.innerHTML='';
+  const isFull=hand.length>=MAX_HAND;
+  pileData[currentLayer].forEach((pile,pi)=>{
+    const col=document.createElement('div');col.className='pile-col';
+    const lbl=document.createElement('div');lbl.className='pile-lbl';
+    lbl.textContent=PILE_NAMES[pi];col.appendChild(lbl);
+    const avail=pile.filter(c=>!c.taken);
+    if(!avail.length){
+      const e=document.createElement('div');
+      e.style.cssText='height:38px;border:1px dashed rgba(249,228,74,.15);border-radius:9px;';
+      col.appendChild(e);
+    }
+    avail.forEach((card,ci)=>{
+      const isLocked=ci>0;
+      const el=document.createElement('div');
+      el.className='pile-card '+card.type+(isLocked?' locked-card':(isFull?' full-hand':''));
+      const badge=document.createElement('div');badge.className='pc-badge';
+      badge.textContent=card.type==='wrd'?'KATA':'MAKNA';el.appendChild(badge);
+      if(isLocked){
+        const lov=document.createElement('div');lov.className='locked-overlay';lov.textContent='🔒';el.appendChild(lov);
+      }
+      if(card.type==='wrd') el.innerHTML+=`<div class="pc-arabic">${card.a}</div><div class="pc-word">${card.w}</div>`;
+      else el.innerHTML+=`<div class="pc-def">${card.d}</div>`;
+      if(!isLocked && !isFull) el.addEventListener('click',()=>pickCard(card));
+      col.appendChild(el);
+    });
+    area.appendChild(col);
+  });
+}
+
+function pickCard(card){
+  if(gameOver||card.taken)return;
+  if(hand.length>=MAX_HAND){setLog('⚠ Tangan sudah penuh! Setor atau buang kartu dulu.',true);return;}
+  card.taken=true;
+  hand.push(card);
+  renderPiles();renderHand();
+  setLog(`"${card.type==='wrd'?card.w:card.w+' (makna)'}" diambil ke tangan`);
+}
+
+function renderHand(){
+  // slots indicator
+  const slotsEl=document.getElementById('hand-slots');
+  slotsEl.innerHTML='';
+  for(let i=0;i<MAX_HAND;i++){
+    const dot=document.createElement('div');
+    dot.className='slot-dot'+(i<hand.length?' filled'+(handSel===i?' sel':''):'');
+    slotsEl.appendChild(dot);
+  }
+
+  const hc=document.getElementById('hand-cards');hc.innerHTML='';
+  if(!hand.length){
+    hc.innerHTML='<span class="hempty">Ambil kartu dari tumpukan (maks 3)</span>';
+    document.getElementById('btn-setor').disabled=true;
+    return;
+  }
+  // render filled cards
+  hand.forEach((card,i)=>{
+    const el=document.createElement('div');
+    el.className='hcard '+card.type+(handSel===i?' sel':'');
+    const rm=document.createElement('span');rm.className='hc-rm';rm.textContent='✕';
+    rm.addEventListener('click',e=>{e.stopPropagation();returnCard(i);});
+    const badge=document.createElement('div');badge.className='hc-badge';
+    badge.textContent=card.type==='wrd'?'KATA':'MAKNA';
+    el.appendChild(badge);el.appendChild(rm);
+    if(card.type==='wrd') el.innerHTML+=`<div class="hc-arabic">${card.a}</div><div class="hc-word">${card.w}</div>`;
+    else el.innerHTML+=`<div class="hc-def">${card.d}</div>`;
+    el.addEventListener('click',()=>selHand(i));
+    hc.appendChild(el);
+  });
+  // render empty slot placeholders
+  for(let i=hand.length;i<MAX_HAND;i++){
+    const sl=document.createElement('div');sl.className='hslot-empty';
+    sl.innerHTML='<span>＋</span>';
+    hc.appendChild(sl);
+  }
+  checkSetor();
+}
+
+function selHand(idx){
+  if(gameOver)return;
+  if(handSel===null){handSel=idx;renderHand();}
+  else if(handSel===idx){handSel=null;renderHand();}
+  else{
+    const A=hand[handSel],B=hand[idx];
+    if(A.pairId===B.pairId&&A.type!==B.type){
+      handSel=null;renderHand();setLog(`Pasangan "${A.w}" ditemukan — tekan Setor!`);
+    } else {
+      setLog('Bukan pasangan — pilih kartu lain!');handSel=idx;renderHand();
+    }
+  }
+}
+
+function returnCard(idx){
+  if(gameOver)return;
+  const card=hand[idx];card.taken=false;
+  hand.splice(idx,1);
+  if(handSel!==null){if(handSel===idx)handSel=null;else if(handSel>idx)handSel--;}
+  renderPiles();renderHand();
+  setLog('Kartu dikembalikan ke tumpukan');
+}
+
+function checkSetor(){
+  document.getElementById('btn-setor').disabled=!findPairs().length;
+}
+
+function findPairs(){
+  let found=[];
+  for(let i=0;i<hand.length;i++)
+    for(let j=i+1;j<hand.length;j++)
+      if(hand[i].pairId===hand[j].pairId&&hand[i].type!==hand[j].type)
+        found.push([i,j]);
+  return found;
+}
+
+document.getElementById('btn-setor').addEventListener('click',()=>{
+  if(gameOver)return;
+  const pFound=findPairs();if(!pFound.length)return;
+  const timeBonus=Math.round((timeLeft/TIME_LIMIT)*60);
+  // dengan maks 3 kartu, kalau 3 kartu semua terisi = risiko max = bonus lebih besar
+  const handBonus=hand.length===3?35:hand.length===2?15:0;
+  const comboMult=1+combo*0.5;
+  let ptsTotal=0;
+  pFound.forEach(()=>{ptsTotal+=Math.round((100+timeBonus+handBonus)*comboMult);});
+  const toRm=new Set();pFound.forEach(([i,j])=>{toRm.add(i);toRm.add(j);});
+  hand=hand.filter((_,i)=>!toRm.has(i));
+  handSel=null;combo+=pFound.length;totalSetor+=pFound.length;score+=ptsTotal;
+  popPoints('+'+ptsTotal);showCombo(true);updStats();renderHand();
+
+  if(checkLayerComplete()){
+    layerDone[currentLayer-1]=true;
+    if(currentLayer<LAYER_COUNT){
+      currentLayer++;hand=[];handSel=null;
+      setLog(`✦ Lapisan ${currentLayer-1} selesai! Lapisan ${currentLayer} terbuka! +30s`);
+      addTimeBonus();
+    } else {
+      clearInterval(timerInt);endGame(true,"✦ Masha'Allah! ✦");return;
+    }
+    renderLayerTabs();renderPiles();
+  } else {
+    renderPiles();
+    setLog(`✦ Setor ${pFound.length} pasangan! +${ptsTotal} poin (combo x${combo})`);
+  }
+});
+
+function checkLayerComplete(){
+  return pileData[currentLayer].flat().every(c=>c.taken) && hand.filter(c=>c.layer===currentLayer).length===0;
+}
+
+function addTimeBonus(){
+  timeLeft=Math.min(TIME_LIMIT,timeLeft+30);
+  document.getElementById('tbar').style.width=(timeLeft/TIME_LIMIT*100)+'%';
+  popPoints('+30s ⏱');
+}
+
+document.getElementById('btn-clear').addEventListener('click',()=>{
+  if(gameOver||!hand.length)return;
+  const penalty=combo>0?60:25;
+  score=Math.max(0,score-penalty);combo=0;
+  hand.forEach(c=>{c.taken=false;});hand=[];handSel=null;
+  updStats();renderPiles();renderHand();showCombo(false);
+  setLog(`Tangan dibuang — combo reset, -${penalty} poin`,false);
+});
+
+function updStats(){
+  document.getElementById('v-score').textContent=score;
+  document.getElementById('v-combo').textContent='x'+(combo+1);
+  document.getElementById('v-layer').textContent=currentLayer+'/'+LAYER_COUNT;
+  document.getElementById('v-pairs').textContent=totalSetor+'/32';
+  document.getElementById('v-time').textContent=timeLeft;
+}
+
+function setLog(t,isWarn=false){
+  const el=document.getElementById('log-txt');
+  el.textContent=t;el.className=isWarn?'warn':'';
+}
+
+function showCombo(on){
+  const el=document.getElementById('combo-txt');
+  if(on&&combo>1){el.textContent='🔥 COMBO x'+combo+'! Bonus aktif!';el.style.display='inline';}
+  else el.style.display='none';
+}
+
+function popPoints(txt){
+  const el=document.createElement('div');el.className='ptpop';el.textContent=txt;
+  el.style.left='45%';el.style.top='35%';
+  document.getElementById('app').appendChild(el);setTimeout(()=>el.remove(),950);
+}
+
+function endGame(win,title){
+  gameOver=true;clearInterval(timerInt);
+  document.getElementById('ovl-title').textContent=title;
+  if(win){
+    const tb=timeLeft*2;const fs=score+tb;
+    document.getElementById('ovl-score').textContent=fs+' poin';
+    document.getElementById('ovl-msg').innerHTML=`Semua 4 lapisan & 32 pasang disetor!<br>Bonus waktu sisa: +${tb}<br>Combo tertinggi: x${combo+1}`;
+  } else {
+    document.getElementById('ovl-score').textContent=score+' poin';
+    document.getElementById('ovl-msg').innerHTML=`Lapisan selesai: ${layerDone.filter(Boolean).length}/4<br>Pasang disetor: ${totalSetor}/32<br>Coba lagi dan tingkatkan combo!`;
+  }
+  document.getElementById('overlay').classList.add('show');
+}
+
+document.getElementById('btn-restart').addEventListener('click',init);
+document.getElementById('ovl-btn').addEventListener('click',init);
+init();
+</script>
